@@ -14,25 +14,52 @@ import {
   View,
   Text,
   StatusBar,
+  Dimensions,
 } from 'react-native';
+import {useSafeArea, SafeAreaProvider} from 'react-native-safe-area-context';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-const App: () => React$Node = () => {
+const useScreenDimensions = () => {
+  const [screenData, setScreenData] = React.useState(Dimensions.get('screen'));
+  const [windowData, setWindowData] = React.useState(Dimensions.get('window'));
+  const insets = useSafeArea();
+
+  React.useEffect(() => {
+    const onChange = result => {
+      setScreenData(result.screen);
+      setWindowData(result.window);
+    };
+
+    Dimensions.addEventListener('change', onChange);
+
+    return () => Dimensions.removeEventListener('change', onChange);
+  }, []);
+
+  return {
+    screenData,
+    windowData,
+    isLandscape: screenData.width > screenData.height,
+    insets,
+  };
+};
+
+const Component: () => React$Node = () => {
+  const {screenData, windowData, insets} = useScreenDimensions();
+  const [refresh, setRefresh] = React.useState(0);
+
+  React.useEffect(() => {
+    setRefresh(refresh + 1)
+
+  }, [])
+
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
-          <Header />
           {global.HermesInternal == null ? null : (
             <View style={styles.engine}>
               <Text style={styles.footer}>Engine: Hermes</Text>
@@ -40,35 +67,69 @@ const App: () => React$Node = () => {
           )}
           <View style={styles.body}>
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
+              <Text style={styles.sectionTitle}>window sizes</Text>
               <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
+                Width: {windowData.width}
+              </Text>
+              <Text style={styles.sectionDescription}>
+                Height: {windowData.height}
+              </Text>
+              <Text style={styles.sectionTitle}>screen sizes</Text>
+              <Text style={styles.sectionDescription}>
+                Width: {screenData.width}
+              </Text>
+              <Text style={styles.sectionDescription}>
+                Height: {screenData.height}
+              </Text>
+              <Text style={styles.sectionTitle}>status bar</Text>
+              <Text style={styles.sectionDescription}>
+                Height: {StatusBar.currentHeight}
+              </Text>
+              <Text style={styles.sectionDescription}>
+                status + Height: {StatusBar.currentHeight + windowData.height}
               </Text>
             </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
           </View>
+          <View
+            style={{
+              backgroundColor: 'gray',
+              height: windowData.height,
+              width: windowData.width,
+              marginBottom: 50,
+              borderWidth: 1,
+              borderColor: 'tomato',
+            }}>
+            <Text style={styles.sectionDescription}>
+              This square should fit on entiry screen
+            </Text>
+            <Text style={styles.sectionDescription}>
+             number of refreshs {refresh}
+            </Text>
+            <Text style={styles.sectionDescription}>
+              insets top: {insets.top}
+            </Text>
+            <Text style={styles.sectionDescription}>
+              insets right: {insets.right}
+            </Text>
+            <Text style={styles.sectionDescription}>
+              insets left: {insets.left}
+            </Text>
+            <Text style={styles.sectionDescription}>
+              insets bottom: {insets.bottom}
+            </Text>
+          </View>
+          <Text style={styles.sectionDescription}>marginBottom: 50</Text>
         </ScrollView>
       </SafeAreaView>
-    </>
+    </SafeAreaProvider>
+  );
+};
+
+const App: () => React$Node = () => {
+  return (
+    <SafeAreaProvider>
+      <Component />
+    </SafeAreaProvider>
   );
 };
 
